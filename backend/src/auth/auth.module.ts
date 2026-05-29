@@ -13,11 +13,13 @@ import { BruteForceGuard } from '../common/guards/brute-force.guard';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { MailerModule } from '../mailer/mailer.module';
+import { WalletModule } from '../wallet/wallet.module';
 import type { StringValue } from 'ms';
 
 @Module({
   imports: [
     UsersModule,
+    WalletModule,
     TypeOrmModule.forFeature([PasswordResetToken, RefreshToken]),
     MailerModule,
     PassportModule,

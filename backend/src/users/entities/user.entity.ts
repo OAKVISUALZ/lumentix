@@ -66,6 +66,9 @@ export class User {
   })
   notificationPreferences: Record<string, boolean>;
 
+  @Column({ type: 'boolean', default: false })
+  emailOptOut: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

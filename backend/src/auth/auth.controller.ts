@@ -1,5 +1,3 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -26,11 +24,12 @@ import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
-
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { WalletService } from '../wallet/wallet.service';
+import { ChallengeRequestDto } from '../wallet/dto/challenge-request.dto';
+import { VerifySignatureDto } from '../wallet/dto/verify-signature.dto';
 
 @ApiTags('Auth')
 @ApiResponse({ status: 429, description: 'Too many requests' })
@@ -39,6 +38,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly bruteForceService: BruteForceService,
+    private readonly walletService: WalletService,
   ) {}
 
   @Post('register')
@@ -151,5 +151,34 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized or invalid token' })
   logout(@Body() dto: RefreshTokenDto, @Req() req: AuthenticatedRequest) {
     return this.authService.logout(req.user.id, dto.refreshToken);
+  }
+
+  @Post('wallet-challenge')
+  @ApiOperation({
+    summary: 'Request wallet link challenge',
+    description: 'Public. Returns a message to sign with Freighter.',
+  })
+  @ApiResponse({ status: 201, description: 'Challenge returned' })
+  walletChallenge(@Body() dto: ChallengeRequestDto) {
+    return this.walletService.requestChallenge(dto.publicKey);
+  }
+
+  @Post('wallet-verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Verify wallet signature and link',
+    description: 'Authenticated. Verifies the signed challenge and links the wallet.',
+  })
+  @ApiResponse({ status: 201, description: 'Wallet linked' })
+  walletVerify(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: VerifySignatureDto,
+  ) {
+    return this.walletService.verifyAndLink(
+      req.user.id,
+      dto.publicKey,
+      dto.signature,
+    );
   }
 }

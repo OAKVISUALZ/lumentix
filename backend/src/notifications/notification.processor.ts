@@ -32,10 +32,15 @@ export class NotificationProcessor {
 
     try {
       const user = await this.usersService.findById(job.data.userId);
-      // We need the raw entity to access notificationPreferences if findById sanitizes it
-      // Actually UsersService.findById returns sanitized user.
-      // Let's check if notificationPreferences is included in sanitized user.
-      const prefs = (user as any).notificationPreferences;
+      if ((user as { emailOptOut?: boolean }).emailOptOut) {
+        this.logger.log(
+          `Skipping ${job.name} email for user ${job.data.userId} — global email opt-out`,
+        );
+        return true;
+      }
+
+      const prefs = (user as { notificationPreferences?: Record<string, boolean> })
+        .notificationPreferences;
 
       if (prefs && prefs[preferenceKey] === false) {
         this.logger.log(`Skipping ${job.name} email for user ${job.data.userId} — opted out`);
