@@ -18,6 +18,7 @@ import { REDIS_CLIENT } from '../common/redis/redis.provider';
 import { UserWallet } from './entities/user-wallet.entity';
 
 const NONCE_TTL_SECONDS = 300; // 5 minutes
+const SIGN_MESSAGE_PREFIX = 'Stellar Signed Message:\n';
 
 @Injectable()
 export class WalletService {
@@ -251,6 +252,13 @@ export class WalletService {
   // Private helpers
   // ─────────────────────────────────────────────────────────────────────────
 
+  private encodeSep53Message(message: string): Buffer {
+    return Buffer.concat([
+      Buffer.from(SIGN_MESSAGE_PREFIX, 'utf8'),
+      Buffer.from(message, 'utf8'),
+    ]);
+  }
+
   private verifySignature(
     publicKey: string,
     message: string,
@@ -258,8 +266,15 @@ export class WalletService {
   ): boolean {
     try {
       const keypair = Keypair.fromPublicKey(publicKey);
-      const messageBuffer = Buffer.from(message, 'utf8');
       const signatureBuffer = Buffer.from(signatureHex, 'hex');
+      const sep53Hash = crypto.createHash('sha256')
+        .update(this.encodeSep53Message(message))
+        .digest();
+      if (keypair.verify(sep53Hash, signatureBuffer)) {
+        return true;
+      }
+      // Legacy: raw UTF-8 message (pre-SEP-53 challenges)
+      const messageBuffer = Buffer.from(message, 'utf8');
       return keypair.verify(messageBuffer, signatureBuffer);
     } catch (err) {
       this.logger.warn(

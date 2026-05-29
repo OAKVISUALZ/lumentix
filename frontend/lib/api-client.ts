@@ -327,4 +327,69 @@ export const apiClient = {
     request<any>(`/events/${eventId}/capacity/snapshot/latest`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  // ── Profile / Users ─────────────────────────────────────────────────────────
+  getMe: (token: string) =>
+    request<import("@/types/user").UserProfile>("/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  patchMe: (body: { email?: string }, token: string) =>
+    request<import("@/types/user").UserProfile>("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  patchUserPreferences: (
+    body: { emailOptOut?: boolean },
+    token: string,
+  ) =>
+    request<import("@/types/user").UserProfile>("/users/me/preferences", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  deleteMe: (token: string) =>
+    request<void>("/users/me", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getSocialProfile: (token: string) =>
+    request<import("@/types/user").SocialProfile | null>("/social/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  updateSocialProfile: (
+    body: { displayName?: string },
+    token: string,
+  ) =>
+    request<import("@/types/user").SocialProfile>("/social/profile", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  walletChallenge: (publicKey: string) =>
+    request<{ message: string }>("/auth/wallet-challenge", {
+      method: "POST",
+      body: JSON.stringify({ publicKey }),
+    }),
+
+  walletVerify: (
+    body: { publicKey: string; signature: string },
+    token: string,
+  ) =>
+    request<import("@/types/user").UserProfile>("/auth/wallet-verify", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getWalletStatus: (token: string) =>
+    request<import("@/types/user").WalletStatus>("/wallet/status", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

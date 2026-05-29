@@ -28,6 +28,7 @@ import {
   PortfolioResponseDto,
 } from './dto/portfolio-response.dto';
 import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
+import { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
 
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -257,6 +258,21 @@ export class UsersService {
       totalValue: parseFloat(totalValue.toFixed(2)),
       breakdown,
     };
+  }
+
+  async updatePreferences(
+    userId: string,
+    dto: UpdateUserPreferencesDto,
+  ): Promise<Omit<User, 'passwordHash'>> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+    if (dto.emailOptOut !== undefined) {
+      user.emailOptOut = dto.emailOptOut;
+    }
+    const saved = await this.usersRepository.save(user);
+    return this.sanitize(saved);
   }
 
   async updateNotificationPreferences(

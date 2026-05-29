@@ -18,5 +18,6 @@ import { RedisProvider } from '../common/redis/redis.provider';
   ],
   providers: [WalletService, RedisProvider],
   controllers: [WalletController],
+  exports: [WalletService],
 })
 export class WalletModule {}

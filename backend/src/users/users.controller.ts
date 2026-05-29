@@ -28,6 +28,7 @@ import { AuthenticatedRequest } from '../common/interfaces/authenticated-request
 import { Roles } from 'src/admin/roles.decorator';
 import { UserRole } from './enums/user-role.enum';
 import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
+import { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -87,6 +88,16 @@ export class UsersController {
       req.user.id,
       updateDto,
     );
+  }
+
+  @Patch('me/preferences')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update account preferences (e.g. email opt-out)' })
+  async updatePreferences(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateUserPreferencesDto,
+  ) {
+    return this.usersService.updatePreferences(req.user.id, dto);
   }
 
   @Post('me/request-role')
